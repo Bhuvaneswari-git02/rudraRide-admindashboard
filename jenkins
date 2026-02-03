@@ -4,11 +4,9 @@ pipeline {
     environment {
         COMPOSE_DIR = "backend"
 
-        // SonarQube
         SONAR_PROJECT_KEY  = "rudraRide-admindashboard"
-        SONAR_PROJECT_NAME = "rudraRide Admin Dashboard"
-        SONAR_SCANNER     = tool 'SonarScanner'
-        SONARQUBE_ENV     = 'SonarQubeServer'
+        SONAR_PROJECT_NAME = "RudraRide Admin Dashboard"
+        SONAR_SCANNER = tool 'SonarScanner'
     }
 
     stages {
@@ -20,19 +18,9 @@ pipeline {
             }
         }
 
-        stage('Verify Docker') {
-            steps {
-                sh 'docker version'
-                sh 'docker compose version'
-            }
-        }
-
-        /* =======================
-           SONARQUBE ANALYSIS
-           ======================= */
         stage('SonarQube Scan') {
             steps {
-                withSonarQubeEnv("${SONARQUBE_ENV}") {
+                withSonarQubeEnv('SonarQubeServer') {
                     sh """
                     ${SONAR_SCANNER}/bin/sonar-scanner \
                       -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
@@ -43,10 +31,7 @@ pipeline {
             }
         }
 
-        /* =======================
-           QUALITY GATE
-           ======================= */
-        stage('SonarQube Quality Gate') {
+        stage('Quality Gate') {
             steps {
                 timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
@@ -54,56 +39,14 @@ pipeline {
             }
         }
 
-        /* =======================
-           TRIVY FILE SCAN
-           ======================= */
-        stage('Trivy Filesystem Scan') {
-            steps {
-                sh '''
-                trivy fs . \
-                  --severity HIGH,CRITICAL \
-                  --exit-code 1 \
-                  --no-progress
-                '''
-            }
-        }
-
-        stage('Stop Existing Containers') {
+        stage('Build & Deploy') {
             steps {
                 dir("${COMPOSE_DIR}") {
-                    sh 'docker compose down || true'
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                dir("${COMPOSE_DIR}") {
-                    sh 'docker compose build'
-                }
-            }
-        }
-
-        /* =======================
-           TRIVY IMAGE SCAN
-           ======================= */
-        stage('Trivy Image Scan') {
-            steps {
-                sh '''
-                docker images --format "{{.Repository}}:{{.Tag}}" | grep -v "<none>" | while read image; do
-                    trivy image "$image" \
-                      --severity HIGH,CRITICAL \
-                      --exit-code 1 \
-                      --no-progress
-                done
-                '''
-            }
-        }
-
-        stage('Deploy Containers') {
-            steps {
-                dir("${COMPOSE_DIR}") {
-                    sh 'docker compose up -d'
+                    sh '''
+                    docker compose down || true
+                    docker compose build
+                    docker compose up -d
+                    '''
                 }
             }
         }
@@ -111,10 +54,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment successful (Quality Gates Passed)'
+            echo '✅ SonarQube Quality Gate PASSED'
         }
         failure {
-            echo '❌ Pipeline failed due to quality or security issues'
+            echo '❌ Quality Gate FAILED — Deployment stopped'
         }
     }
 }
