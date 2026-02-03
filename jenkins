@@ -3,10 +3,8 @@ pipeline {
 
     environment {
         COMPOSE_DIR = "backend"
-
         SONAR_PROJECT_KEY  = "rudraRide-admindashboard"
         SONAR_PROJECT_NAME = "RudraRide Admin Dashboard"
-        SONAR_SCANNER = tool 'SonarScanner'
     }
 
     stages {
@@ -19,20 +17,20 @@ pipeline {
         }
 
         stage('SonarQube Scan') {
-    steps {
-        withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-            sh '''
-              sonar-scanner \
-              -Dsonar.projectKey=rudraRide-admindashboard \
-              -Dsonar.projectName="RudraRide Admin Dashboard" \
-              -Dsonar.sources=. \
-              -Dsonar.host.url=http://<EC2-IP>:9000 \
-              -Dsonar.login=$SONAR_TOKEN
-            '''
+            steps {
+                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                    withSonarQubeEnv('SonarQubeServer') {
+                        sh """
+                        sonar-scanner \
+                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
+                          -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
+                          -Dsonar.sources=. \
+                          -Dsonar.login=$SONAR_TOKEN
+                        """
+                    }
+                }
+            }
         }
-    }
-}
-
 
         stage('Quality Gate') {
             steps {
