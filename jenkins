@@ -17,20 +17,20 @@ pipeline {
         }
 
         stage('SonarQube Scan') {
-            steps {
-                withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
-                    withSonarQubeEnv('SonarQubeServer') {
-                        sh """
-                        sonar-scanner \
-                          -Dsonar.projectKey=${SONAR_PROJECT_KEY} \
-                          -Dsonar.projectName="${SONAR_PROJECT_NAME}" \
-                          -Dsonar.sources=. \
-                          -Dsonar.login=$SONAR_TOKEN
-                        """
-                    }
-                }
+    steps {
+        withSonarQubeEnv('SonarQubeServer') {
+            withCredentials([string(credentialsId: 'sonarqube-token', variable: 'SONAR_TOKEN')]) {
+                sh '''
+                  ${SONAR_SCANNER}/bin/sonar-scanner \
+                    -Dsonar.projectKey=rudraRide-admindashboard \
+                    -Dsonar.projectName="RudraRide Admin Dashboard" \
+                    -Dsonar.sources=. \
+                    -Dsonar.login=$SONAR_TOKEN
+                '''
             }
         }
+    }
+}
 
         stage('Quality Gate') {
             steps {
