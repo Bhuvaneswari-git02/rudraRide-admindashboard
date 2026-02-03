@@ -14,10 +14,10 @@ pipeline {
             }
         }
 
-        stage('Verify Docker Installation') {
+        stage('Verify Docker') {
             steps {
-                sh 'docker --version'
-                sh 'docker-compose --version'
+                sh 'docker version'
+                sh 'docker ps'
             }
         }
 
@@ -48,10 +48,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Docker images built and application deployed successfully'
+            echo '✅ Application deployed successfully'
         }
         failure {
-            echo '❌ Jenkins pipeline failed'
+            echo '❌ Deployment failed'
         }
     }
 }
