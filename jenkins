@@ -3,10 +3,12 @@ pipeline {
 
     environment {
         COMPOSE_DIR = "backend"
-        SONAR_PROJECT_KEY = "rudraRide-admindashboard"
+
+        // SonarQube
+        SONAR_PROJECT_KEY  = "rudraRide-admindashboard"
         SONAR_PROJECT_NAME = "rudraRide Admin Dashboard"
-        SONAR_SCANNER = tool 'SonarScanner'
-        SONARQUBE_ENV = 'SonarQubeServer'
+        SONAR_SCANNER     = tool 'SonarScanner'
+        SONARQUBE_ENV     = 'SonarQubeServer'
     }
 
     stages {
@@ -26,9 +28,9 @@ pipeline {
         }
 
         /* =======================
-           SONARQUBE STATIC ANALYSIS
+           SONARQUBE ANALYSIS
            ======================= */
-        stage('SonarQube Analysis') {
+        stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv("${SONARQUBE_ENV}") {
                     sh """
@@ -42,7 +44,7 @@ pipeline {
         }
 
         /* =======================
-           SONARQUBE QUALITY GATE
+           QUALITY GATE
            ======================= */
         stage('SonarQube Quality Gate') {
             steps {
@@ -53,22 +55,19 @@ pipeline {
         }
 
         /* =======================
-           TRIVY FILESYSTEM SCAN
+           TRIVY FILE SCAN
            ======================= */
         stage('Trivy Filesystem Scan') {
             steps {
                 sh '''
                 trivy fs . \
-                  --exit-code 1 \
                   --severity HIGH,CRITICAL \
+                  --exit-code 1 \
                   --no-progress
                 '''
             }
         }
 
-        /* =======================
-           STOP OLD CONTAINERS
-           ======================= */
         stage('Stop Existing Containers') {
             steps {
                 dir("${COMPOSE_DIR}") {
@@ -77,9 +76,6 @@ pipeline {
             }
         }
 
-        /* =======================
-           BUILD IMAGES
-           ======================= */
         stage('Build Docker Images') {
             steps {
                 dir("${COMPOSE_DIR}") {
@@ -96,17 +92,14 @@ pipeline {
                 sh '''
                 docker images --format "{{.Repository}}:{{.Tag}}" | grep -v "<none>" | while read image; do
                     trivy image "$image" \
+                      --severity HIGH,CRITICAL \
                       --exit-code 1 \
-                      --severity CRITICAL,HIGH \
                       --no-progress
                 done
                 '''
             }
         }
 
-        /* =======================
-           DEPLOY CONTAINERS
-           ======================= */
         stage('Deploy Containers') {
             steps {
                 dir("${COMPOSE_DIR}") {
@@ -118,10 +111,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment successful with Quality Gates passed'
+            echo '✅ Deployment successful (Quality Gates Passed)'
         }
         failure {
-            echo '❌ Pipeline failed (Quality Gate / Security issues)'
+            echo '❌ Pipeline failed due to quality or security issues'
         }
     }
 }
