@@ -3,8 +3,9 @@ pipeline {
 
     environment {
         COMPOSE_DIR   = "backend"
-        SONAR_SCANNER = tool 'SonarScanner'
         IMAGE_NAME    = "rudraride-admin"
+        IMAGE_TAG     = "latest"
+        SONAR_SCANNER = tool 'SonarScanner'
     }
 
     stages {
@@ -16,7 +17,7 @@ pipeline {
             }
         }
 
-        stage('Verify Docker & Trivy') {
+        stage('Verify Tools') {
             steps {
                 sh 'docker version'
                 sh 'docker compose version'
@@ -48,12 +49,13 @@ pipeline {
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Docker Build Image') {
             steps {
                 dir("${COMPOSE_DIR}") {
                     sh '''
-                    docker compose build
-                    docker images
+                    echo "🐳 Building Docker image..."
+                    docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                    docker images | grep ${IMAGE_NAME}
                     '''
                 }
             }
@@ -62,8 +64,8 @@ pipeline {
         stage('Trivy Image Scan') {
             steps {
                 sh '''
-                echo "🔍 Running Trivy scan..."
-                trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:latest
+                echo "🔐 Running Trivy security scan..."
+                trivy image --severity HIGH,CRITICAL --exit-code 1 ${IMAGE_NAME}:${IMAGE_TAG}
                 '''
             }
         }
@@ -82,10 +84,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ SonarQube PASSED & Trivy CLEAN — Deployment successful'
+            echo '✅ SonarQube PASSED + Trivy CLEAN — Deployment successful'
         }
         failure {
-            echo '❌ Security checks FAILED — Deployment blocked'
+            echo '❌ Security checks FAILED — Deployment stopped'
         }
     }
 }
