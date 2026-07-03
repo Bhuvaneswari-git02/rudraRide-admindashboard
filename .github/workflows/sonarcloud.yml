@@ -16,13 +16,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2️⃣ Setup Node (Frontend support)
+      # 2️⃣ Setup Node.js (frontend support)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ Setup Python (Backend support)
+      # 3️⃣ Setup Python (backend support)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -31,16 +31,17 @@ jobs:
       # 4️⃣ Install backend dependencies
       - name: Install backend dependencies
         run: |
-          cd backend/dist
-          pip install pytest pytest-cov -r requirements.txt
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-cov
 
-      # 5️⃣ Run tests with coverage
+      # 5️⃣ Run backend tests (coverage)
       - name: Run backend tests with coverage
         run: |
-          cd backend/dist
+          cd backend
           pytest --cov=. || true
 
-      # 6️⃣ SonarCloud Scan (LAST STEP ALWAYS)
+      # 6️⃣ SonarCloud Scan (MUST BE LAST STEP)
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
