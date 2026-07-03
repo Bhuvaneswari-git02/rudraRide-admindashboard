@@ -16,13 +16,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 2️⃣ Setup Node.js
+      # 2️⃣ Setup Node.js (frontend support)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # 3️⃣ Setup Python
+      # 3️⃣ Setup Python (backend support)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -31,16 +31,22 @@ jobs:
       # 4️⃣ Install backend dependencies
       - name: Install backend dependencies
         run: |
-          pip install -r backend/requirements.txt || true
+          pip install -r backend/requirements.txt
           pip install pytest pytest-cov
 
-      # 5️⃣ Run tests (optional, safe mode)
+      # 5️⃣ Run tests with coverage (safe mode)
       - name: Run tests
         run: |
           pytest --cov=. || true
 
-      # 6️⃣ SonarCloud Scan (LAST STEP)
+      # 6️⃣ SonarCloud Scan (MUST BE LAST STEP)
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=bhuvaneswari-git02_rudraRide-admindashboard
+            -Dsonar.organization=bhuvaneswari-git02
+            -Dsonar.sources=backend,frontend
+            -Dsonar.sourceEncoding=UTF-8
