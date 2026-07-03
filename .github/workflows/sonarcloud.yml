@@ -27,7 +27,11 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install SonarScanner
+      - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v5
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=bhuvaneswari-git02_rudraRide-admindashboard
+            -Dsonar.organization=bhuvaneswari-git02
