@@ -33,4 +33,4 @@ jobs:
           args: >
             -Dsonar.projectKey=bhuvaneswari-git02_rudraRide-admindashboard
             -Dsonar.organization=bhuvaneswari-git02
-            -Dsonar.sources=backend/dist/admin-frontend,backend/dist/admin_backend,frontend/dist/src
+            -Dsonar.sources=backend,frontend
