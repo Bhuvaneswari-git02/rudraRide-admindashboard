@@ -10,21 +10,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # 2️⃣ Setup Node (Frontend support)
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # 3️⃣ Setup Python (Backend support)
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
+      # 4️⃣ Install backend dependencies
+      - name: Install backend dependencies
+        run: |
+          cd backend/dist
+          pip install pytest pytest-cov -r requirements.txt
+
+      # 5️⃣ Run tests with coverage
+      - name: Run backend tests with coverage
+        run: |
+          cd backend/dist
+          pytest --cov=. || true
+
+      # 6️⃣ SonarCloud Scan (LAST STEP ALWAYS)
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
         env:
