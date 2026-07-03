@@ -23,7 +23,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.11
+          python-version: "3.11"
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v6
@@ -33,4 +33,4 @@ jobs:
           args: >
             -Dsonar.projectKey=bhuvaneswari-git02_rudraRide-admindashboard
             -Dsonar.organization=bhuvaneswari-git02
-            -Dsonar.sources=backend/dist,frontend/dist
+            -Dsonar.sources=backend/dist/admin-frontend,backend/dist/admin_backend,frontend/dist/src
